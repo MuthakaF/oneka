@@ -4,3 +4,4 @@ data/raw/
 data/processed/
 .ipynb_checkpoints/
 .vscode/
+node_modules/
