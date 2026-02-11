@@ -71,6 +71,69 @@
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 222 47% 11%;
   }
+
+  /* Dark Mode */
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 0 0% 98%;
+
+    --card: 222 47% 16%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 222 47% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 215 16% 47%;
+    --muted-foreground: 215 13% 75%;
+
+    --accent: 210 40% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 0 0% 98%;
+
+    /* Status Colors - Dark Mode */
+    --status-green: 142 76% 46%;
+    --status-green-muted: 142 40% 20%;
+    --status-amber: 38 92% 50%;
+    --status-amber-muted: 38 50% 20%;
+    --status-red: 0 84% 60%;
+    --status-red-muted: 0 50% 20%;
+
+    /* Chart Colors - Dark Mode */
+    --chart-1: 215 70% 60%;
+    --chart-2: 142 76% 46%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 60% 60%;
+    --chart-5: 0 84% 60%;
+
+    /* Glass Panel Dark Mode */
+    --glass-bg: 222 47% 11% / 0.9;
+    --glass-border: 222 47% 20% / 0.8;
+
+    /* Grid Overlay Dark Mode */
+    --grid-color: 215 16% 47% / 0.2;
+
+    /* Sidebar Dark Mode */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 47% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 222 47% 20%;
+    --sidebar-ring: 0 0% 98%;
+  }
 }
 
 @layer base {
@@ -88,6 +151,12 @@
     @apply bg-background text-foreground;
     font-size: 15px;
     line-height: 1.6;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  #root {
+    @apply bg-background text-foreground;
+    transition: background-color 200ms ease, color 200ms ease;
   }
 
   /* Monospace for numbers and financial data */
