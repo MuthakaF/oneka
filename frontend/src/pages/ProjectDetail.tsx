@@ -1,5 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { LoadingState } from "@/components/LoadingState";
+import { ErrorState } from "@/components/ErrorState";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -12,8 +14,10 @@ import {
   CheckCircle2,
   Download
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { useState, useEffect } from "react";
+import { getProjectById, type Project } from "@/services/mockProjectsApi";
 
 const progressData = [
   { month: "Jul", financial: 15, physical: 12 },
@@ -31,7 +35,111 @@ const riskFlags = [
   { type: "Disbursement Pattern", severity: "high", description: "Unusual end-of-quarter payment spikes detected" },
 ];
 
+function formatCurrency(value: number): string {
+  if (value >= 1000000000) {
+    return `KES ${(value / 1000000000).toFixed(2)}B`;
+  }
+  return `KES ${(value / 1000000).toFixed(0)}M`;
+}
+
+function getRiskColor(risk: string): "red" | "amber" | "green" | "yellow" {
+  if (risk === "critical") return "red";
+  if (risk === "high") return "red";
+  if (risk === "medium") return "amber";
+  return "green";
+}
+
 export default function ProjectDetail() {
+  const { id } = useParams<{ id: string }>();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      setError("No project ID provided");
+      setLoading(false);
+      return;
+    }
+    fetchProject();
+  }, [id]);
+
+  const fetchProject = async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getProjectById(id);
+      setProject(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      setError(errorMessage);
+      setProject(null);
+    } finally {
+      setLoading(false);
+      setRetrying(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    await fetchProject();
+  };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="p-6 space-y-6">
+          <Link
+            to="/projects"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Projects Registry
+          </Link>
+          <LoadingState />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="p-6 space-y-6">
+          <Link
+            to="/projects"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Projects Registry
+          </Link>
+          <ErrorState error={error} onRetry={handleRetry} isRetrying={retrying} />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!project) {
+    return (
+      <AppLayout>
+        <div className="p-6 space-y-6">
+          <Link
+            to="/projects"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Projects Registry
+          </Link>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Project not found</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
@@ -49,24 +157,24 @@ export default function ProjectDetail() {
           <div className="flex items-start justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <StatusBadge status="red" />
-                <span className="text-xs font-mono text-muted-foreground">PRJ-2024-001</span>
+                <StatusBadge status={getRiskColor(project.riskLevel)} />
+                <span className="text-xs font-mono text-muted-foreground">{project.id}</span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Nairobi-Thika Highway Expansion Phase III
+                {project.name}
               </h1>
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building className="w-4 h-4" />
-                  Kenya National Highways Authority
+                  {project.entity}
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  Nairobi / Kiambu County
+                  {project.county}
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Contract Period: 2022-2025
+                  {project.sector}
                 </div>
               </div>
             </div>
@@ -227,12 +335,12 @@ export default function ProjectDetail() {
                   <span className="font-mono">R1091</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Programme</span>
-                  <span>Roads 2030</span>
+                  <span className="text-muted-foreground">Sector</span>
+                  <span>{project.sector}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Procurement Ref.</span>
-                  <span className="font-mono">PPOA/2022/789</span>
+                  <span className="text-muted-foreground">Risk Level</span>
+                  <span className="capitalize font-medium">{project.riskLevel}</span>
                 </div>
               </div>
             </div>
@@ -243,23 +351,23 @@ export default function ProjectDetail() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Contract Sum</span>
-                  <span className="font-mono font-medium">KES 4.85B</span>
+                  <span className="font-mono font-medium">{formatCurrency(project.contractSum)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Budget Allocated</span>
-                  <span className="font-mono">KES 4.85B</span>
+                  <span className="font-mono">{formatCurrency(project.contractSum)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Disbursed</span>
-                  <span className="font-mono text-status-amber">KES 3.42B</span>
+                  <span className="font-mono text-status-amber">{formatCurrency(project.amountPaid)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Verified Expenditure</span>
-                  <span className="font-mono text-status-red">KES 2.34B</span>
+                  <span className="font-mono text-status-red">{formatCurrency(project.amountPaid * 0.68)}</span>
                 </div>
                 <div className="pt-2 border-t border-border flex justify-between">
                   <span className="text-muted-foreground">Unverified Gap</span>
-                  <span className="font-mono font-medium text-status-red">KES 1.08B</span>
+                  <span className="font-mono font-medium text-status-red">{formatCurrency(project.amountPaid * 0.32)}</span>
                 </div>
               </div>
             </div>
@@ -322,10 +430,11 @@ export default function ProjectDetail() {
             </span>
           </div>
           <span className="text-xs font-mono text-muted-foreground">
-            Last Updated: 2024-01-26 14:32 EAT
+            Last Updated: {new Date(project.lastUpdated).toLocaleDateString()}
           </span>
         </div>
       </div>
     </AppLayout>
   );
 }
+
