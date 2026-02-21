@@ -242,7 +242,7 @@ def simulate_progress_curve(start_date: datetime, today: datetime, expected_end:
     return max(0, min(100, round(base_progress, 2)))
 
 
-# -------------------------------
+# --------------------------------
 # Stalling logic (Kenya-realistic)
 # -------------------------------
 
